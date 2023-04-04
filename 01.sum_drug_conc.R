@@ -17,13 +17,11 @@ dat_raw <- readRDS("data/quadrature_pk_abd.rds")
 # sum data over Gaussian quadrature groups
 data_summed <- dat_raw %>%
   dplyr::select(time, drug_value.conc, group, age, weighting, pop_prop) %>%
-  group_by(group, time) %>%
-  summarise(drug_conc = sum(drug_value.conc * weighting),
-            age = age[1],
-            pop_prop = pop_prop[1])
+  group_by(time) %>%
+  summarise(drug_conc = sum(drug_value.conc * weighting * pop_prop))
 
 # plot the drug concentration over groups
-ggplot(data = data_summed, aes(x = time, y = drug_conc, colour = group)) +
+ggplot(data = data_summed, aes(x = time, y = drug_conc)) +
   geom_line() + theme_bw()
 
 # read in trial data and get maximum time
