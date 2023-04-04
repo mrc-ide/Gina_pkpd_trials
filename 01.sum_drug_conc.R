@@ -12,7 +12,7 @@
 library(tidyverse)
 
 # read in raw data
-dat_raw <- readRDS("data/quadrature_pk_abd.rds")
+dat_raw <- readRDS("data/quadrature_pk.rds")
 
 # sum data over Gaussian quadrature groups
 data_summed <- dat_raw %>%
@@ -36,3 +36,4 @@ data_trimmed <- data_summed %>%
 if (FALSE) {
   saveRDS(data_trimmed, file = "data/drug_conc_summed.rds")
 }
+
