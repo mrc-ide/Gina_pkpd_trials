@@ -30,18 +30,55 @@ time_schedule_treat <- df_trial %>%
 # define parameters
 FOI <- 0.01 / 24 # FOI of 0.08 is daily prob. infection
 min_prob <- 0.05
-half_point <- 1
-k <- 3 # hill function power parameter
+half_point <- 1.5
+k <- 2 # hill function power parameter
 
 # convert drug concentration to probability of protection
 drug_conc <- drug_conc %>%
+  dplyr::filter(time %in% seq(0, max(df_trial$time.1), by = 1)) %>% # ensure it's only hourly values so that this matches the input data
   mutate(prob_susceptible = min_prob + (1 - min_prob) / (1 + (drug_conc / half_point)^k))
 
 # plot probability of protection
-# TODO - once you've summed over age-groups in the previous script, this should no longer be broken down into different colours
-ggplot(data = drug_conc, aes(x = time, y = 1 - prob_susceptible, colour = group)) +
+# ensure that the test parameters show efficacy wanes before subsequent doses
+ggplot(data = drug_conc, aes(x = time/24, y = 1 - prob_susceptible)) +
   geom_line() + theme_bw() +
-  ylim(c(0, 1)) + ylab("Prob. protection")
+  ylim(c(0, 1)) + ylab("Prob. protection") + 
+  geom_hline(aes(yintercept = 1 - min_prob), lty = 2, lwd = 0.4) + 
+  geom_vline(aes(xintercept = 28), lty = 2, lwd = 0.4)
+  
+#######################################################################################
+## create a function to simulate test data for an arm of a trial
+simulate_trial_arm <- function(real_data, drug_arm, prob_susceptible, hourly_foi) {
+  #' input: real data to gain time steps, which treatment arm, vector of hourly probability susceptibilities (drug_conc$prob_susceptible or equivalent)
+  #' input ctd: ths is a vector of 1s for the placebo arm and an hourly foi as a vector also to allow for variable foi in the future
+  #' process: extract time steps, initialise the number of patients, simulate time to next infections and then determine infections in time int from data
+  #' output: a simulated dataframe for that treatment arm with the same data format as the original data
+  ## initialise
+  treat_data <- real_data %>%
+    dplyr::filter(treat_arm == drug_arm)
+  max_time <- treat_data$time.1[nrow(treat_data)]
+  times <- c(treat_data$time, max_time)
+  N_patients <- treat_data$n_patients[1]
+  N_remaining <- N_patients
+  time_infection <- NULL
+  time_next_infection <- 0
+  for(i in 1:N_patients) {
+    time_next_infection <- time_next_infection + rexp(1, rate = N_remaining * hourly_foi)
+    time_infection <- c(time_infection, time_next_infection)
+    N_control_remaining <- N_control_remaining - 1
+    if ((N_control_remaining == 0) || (time_next_infection > max_time)) {
+      break
+    }
+  }
+  # time_infection is a vector of the times of every infection
+  
+  
+}
+
+
+
+
+
 
 # simulate the control arm
 # TODO - this exponential method is technically correct, but to make more
