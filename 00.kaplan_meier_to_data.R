@@ -35,5 +35,9 @@ km_to_trial <- function(km_data, drug_arm, N_patients) {
   return(df)
 }
 
-km_to_trial(km_raw, drug_arm = 1, N_patients = 542)
-km_to_trial(km_raw, drug_arm = 2, N_patients = 546)
+placebo <- km_to_trial(km_raw, drug_arm = 0, N_patients = 542)
+sp <- km_to_trial(km_raw, drug_arm = 1, N_patients = 546)
+
+trial <- rbind(placebo, sp)
+
+write.csv(trial, "data/cisse_data.csv")
